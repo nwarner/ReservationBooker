@@ -1,0 +1,102 @@
+<% provide(:title, "find restaurants") %>
+
+<div class="hero-unit clearfix less_padding">
+  <div class="row-fluid">
+    <div class="span4 sidebar">
+      <%= image_tag "restaurant_patron.jpg", id: "patron" %>
+      <h2 class="username"><%= current_user.name %></h2>
+      <h3 class="bottom_space">
+        <%= link_to pluralize(current_user.requests.count, "reservation request"), user_path(current_user) %>
+      </h3>
+      <%= form_tag({controller: "restaurants", action: "search"}, method: "get", class: "well") do %>
+        <fieldset>
+          <legend class="no_bottom_space"><strong>Need a reservation?</strong></legend>
+          <div class="control-group">
+            <%= label_tag :name, "Name:", class: "control-label" %>
+            <div class="controls">
+              <%= text_field_tag "restaurant_name", nil, class: "input-medium" %>
+            </div>
+          </div>
+          <script type="text/javascript">
+            $(function() {
+              $("#restaurant_name" ).autocomplete({
+                source: "<%= autocomplete_restaurant_name_restaurants_path(format: :json) %>"
+              });
+            });
+          </script>
+          <div class="control-group">
+            <%= label_tag :city, "City:", class: "control-label" %>
+            <div class="controls">
+              <%= text_field_tag "restaurant_city", nil, class: "input-medium" %>
+            </div>
+          </div>
+          <script type="text/javascript">
+            $(function() {
+              $("#restaurant_city" ).autocomplete({
+                source: "<%= autocomplete_restaurant_city_restaurants_path(format: :json) %>"
+              });
+            });
+          </script>
+          <div class="control-group">
+            <%= label_tag :state, "State:", class: "control-label" %>
+            <div class="controls">
+              <%= select_tag :state, options_for_select([["Not selected", 0], ["Alabama", 1],["Alaska", 2],["Arizona", 3],
+                ["Arkansas", 4],["California", 5],["Colorado", 6],["Connecticut", 7],["Delaware", 8],["Florida", 9],["Georgia", 10],
+                ["Hawaii", 11],["Idaho", 12],["Illinois", 13],["Indiana", 14],["Iowa", 15],["Kansas", 16],["Kentucky", 17],
+                ["Louisiana", 18],["Maine", 19],["Maryland", 20],["Massachusetts", 21],["Michigan", 22],["Minnesota", 23],
+                ["Mississippi", 24],["Missouri", 25],["Montana", 26],["Nebraska", 27],["Nevada", 28],["New Hampshire", 29],
+                ["New Jersey", 30],["New Mexico", 31],["New York", 32],["North Carolina", 33],["North Dakota", 34],["Ohio", 35],
+                ["Oklahoma", 36],["Oregon", 37],["Pennsylvania", 38],["Rhode Island", 39],["South Carolina", 40],
+                ["South Dakota", 41],["Tennessee", 42],["Texas", 43],["Utah", 44],["Vermont", 45],["Virginia", 46],
+                ["Washington", 47],["West Virginia", 48],["Wisconsin", 49],["Wyoming", 50]]), class: "input-medium" %>
+              <%= submit_tag "Find restaurant", class: "btn btn-large btn-primary" %>
+            </div>
+          </div>
+        </fieldset>
+      <% end %>
+    </div>
+    <div class="span8 content">
+      <h1 class="page_title bottom_space">find restaurants</h1>
+      <p class="same_line less_left_space">
+        Search results for
+        <% if @name.empty? && @city.empty? && @state.empty? %>
+          all restaurants:
+        <% elsif @name.empty? && @city.empty? %>
+          restaurants in <%= @state %>:
+        <% elsif @name.empty? && @state.empty? %>
+          restaurants in <%= @city %>:
+        <% elsif @city.empty? && @state.empty? %>
+          the restaurant <%= @name %>:
+        <% elsif @name.empty? %>
+          restaurants in <%= @city %>, <%= @state %>:
+        <% elsif @city.empty? %>
+          the restaurant <%= @name %> in <%= @state %>:
+        <% elsif @state.empty? %>
+          the restaurant <%= @name %> in <%= @city %>:
+        <% else %>
+          the restaurant <%= @name %> in <%= @city %>, <%= @state %>:
+        <% end %>
+        (<%= @restaurants.count %>)
+      </p>
+      <p class="same_line2_restaurants"><small>(click on a restaurant to book a reservation)</small></p>
+      <div class="search_results">
+        <% if @restaurants.any? %>
+          <ol class="restaurants">
+            <%= render @restaurants %>
+          </ol>
+          <%= will_paginate @restaurants, options={inner_window: 1, previous_label: "<<", next_label: ">>"} %>
+        <% else %>
+          <hr>
+          <p>We did not find any restaurants matching those search terms.</p>
+        <% end %>
+      </div>
+      <% if params[:request_id] %>
+        <script type="text/javascript"> 
+          $(document).ready(function() {
+            $("#makeReservation_<%= @request.restaurant.id.to_s %>").modal("show"); 
+          });
+        </script>
+      <% end %>
+    </div>
+  </div>
+</div>

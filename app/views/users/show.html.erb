@@ -1,0 +1,32 @@
+<% provide(:title, "view reservation requests") %>
+
+<div class="hero-unit clearfix less_padding">
+  <div class="row-fluid">
+    <div class="span4 sidebar">
+      <%= render "shared/sidebar"%>
+    </div>
+    <div class="span8 content bottom_space">
+      <h1 class="page_title bottom_space">reservation requests</h1>
+      <p class="same_line">Current reservation requests: (<%= @user.requests.count %>)</p>
+      <p class="same_line2_requests">
+        <small>(click on a request to view details)</small>
+      </p>
+      <div class="request_list">
+        <p class="delete_all">
+          <% if @user.requests.any? %>
+            <%= link_to "delete all", delete_all_user_requests_path(current_user), data: { confirm: "Are you sure?" } %>
+          <% end %>
+        </p>
+        <% if @user.requests.any? %>
+          <ol class="requests">
+            <%= render @requests %>
+          </ol>
+          <%= will_paginate @requests %>
+        <% else %>
+          <hr>
+          <p>You currently do not have any reservation requests.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,136 @@
+<li>
+  <p class="request_links"><small>
+    <% if request.isReserved %>
+      <%= link_to "cancel", cancel_user_request_path(current_user, request), class: "tiny_link" %>
+    <% else %>
+      <%= link_to "reserve", reserve_user_request_path(current_user, request), class: "tiny_link" %>
+    <% end %>
+    <%= link_to "change", search_restaurants_path(restaurant_name: request.restaurant.name, request_id: request.id), {remote: true, 'data-toggle' => 'modal', 'data-target' => "#makeReservation_#{request.restaurant.id}", 'data-backdrop' => true, 'data-keyboard' => true, class: "tiny_link" } %>
+    <%= link_to "delete", [current_user, request], method: :delete, data: { confirm: "Are you sure?" },
+           title: request.restaurant.name, class: "tiny_link" %>
+  </small></p>
+  <%= link_to "#showRequest_#{request.id}", data: { toggle: "modal" } do %>
+    <span class="request_time"><%= request.time.strftime("%l:%M %p - %A, %B %e, %Y") %></span>
+    <span class="request_info">
+      <%= request.party_size %> <% if request.party_size == 1 %> person <% else %> people <% end %>@ <strong><%= request.restaurant.name %></strong>
+      in <%= request.restaurant.city %>, <%= request.restaurant.state %>
+    </span>
+    <span class="timestamp">
+      <% if request.isReserved %>
+        reserved
+      <% else %>
+        not reserved
+      <% end %>
+      - created <%= time_ago_in_words(request.created_at) %> ago.
+    </span>
+  <% end %>
+  <% if request != Request.last %>
+    <div class="vertical_space"></div>
+  <% end %>
+</li>
+<div class="modal fade content" id="showRequest_<%= request.id %>">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal">x</button>
+		<h3 class="move_left">request info</h3>
+	</div>
+	<div class="modal-body">
+    <% if not request.isReserved and not request.available_times.include? (request.time.strftime("%-m/%e/%Y ") + request.time.strftime("%l").strip + request.time.strftime(":%M:%S %p %z")) %>
+      <p>
+        Your desired time was not available
+        <% if not request.available_times.empty? %>
+          . Please click one of the nearby available times listed to book your reservation immediately.
+        <% else %>
+          , and there are no open reservations for nearby times.  Please double-check that you entered your desired reservation time correctly.
+        <% end %>
+        You can also alter this request by clicking Change.
+      </p>
+    <% end %>
+    <table class="request_table">
+      <tr>
+        <th rowspan="2" class="request_table_heading">
+          <p>Restaurant:</p>
+        </th>
+        <td class="request_table_data">
+          <p><%= request.restaurant.name %></p>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <p>
+            <%= request.restaurant.address %><br />
+            <%= request.restaurant.city %>, <%= request.restaurant.state %> <%= request.restaurant.ZIP %>
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <th class="request_table_heading2">
+          <p>Party size:</p>
+        </th>
+        <td>
+          <p><%= request.party_size %></p>
+        </td>
+      </tr>
+      <tr>
+        <th class="request_table_heading3">
+          <p>Desired time:<p>
+        </th>
+        <td class="request_table_data">
+          <p><%= request.time.strftime("%l:%M %p - %A, %B %e, %Y") %></p>
+        </td>
+      </tr>
+      <% if not request.available_times.empty? and not request.isReserved %>
+        <tr>
+          <th class="request_table_heading3">
+            <p>Available times:<p>
+          </th>
+          <td class="request_table_data">
+            <ul class="request_display_list">
+              <% request.available_times.each do |time| %>
+                <li>
+                  <%= link_to DateTime.strptime(time, "%m/%d/%Y %l:%M:%S %p %z").strftime("%l:%M %p - %A, %B %e, %Y"),
+                              user_requests_path(current_user, request: { user_id: current_user.id,
+                                                             party_size: request.party_size,
+                                                             time: DateTime.strptime(time, "%m/%d/%Y %l:%M:%S %p %z"),
+                                                             restaurant_id: request.restaurant.id }), { method: :post } %>
+                </li>
+              <% end %>
+            </ul>
+          </td>
+        </tr>
+      <% end %>
+      <tr>
+        <th class="request_table_heading3">
+          <p>Created on:<p>
+        </th>
+        <td class="request_table_data">
+          <p><%= request.created_at.strftime("%l:%M %p - %A, %B %e, %Y") %></p>
+        </td>
+      </tr>
+      <tr>
+        <th class="request_table_heading2">
+          <p>Status:</p>
+        </th>
+        <td>
+          <p>
+            <% if request.isReserved %>
+              Reserved!
+            <% else %>
+              Not reserved.
+            <% end %>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="modal-footer match_background">
+    <% if request.isReserved %>
+    <%= link_to "Cancel", cancel_user_request_path(current_user, request), class: "btn btn-large btn-primary" %>
+    <% else %>
+      <%= link_to "Reserve", reserve_user_request_path(current_user, request), class: "btn btn-large btn-primary" %>
+    <% end %>
+    <%= link_to "Change", search_restaurants_path(restaurant_name: request.restaurant.name, request_id: request.id), {remote: true, 'data-toggle' => 'modal', 'data-target' => "#modal-window", class: "btn btn-large btn-primary" } %>
+    <%= link_to "Delete", [current_user, request], method: :delete, data: { confirm: "Are you sure?" },
+                                                   title: request.restaurant.name, class: "btn btn-large btn-primary" %>
+    <button class="btn btn-large btn-primary" data-dismiss="modal" aria-hidden="true">Close</button>
+    </div>
+</div>

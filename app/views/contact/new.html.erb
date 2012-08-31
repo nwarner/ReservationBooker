@@ -1,0 +1,42 @@
+<% provide(:title, "contact us") %>
+
+<div class="hero-unit clearfix less_padding">
+  <div class="content static_page">
+    <h1 class="page_title">contact us</h1>
+    <p>
+      Feel free to send us feedback on our application... we take the comments of all our users
+      into account during our continual improvement of this website.
+    </p>
+    <div class="static_page_form">
+      <%= form_for(@message, url: contact_path, html: { class: "well" }) do |f| %>
+        <fieldset>
+          <div class="control-group">
+            <%= f.label :name, "Name:", class: "control-label" %>
+            <div class="controls">
+              <%= f.text_field :name, class: "input-medium" %>
+            </div>
+          </div>
+          <div class="control-group">
+            <%= f.label :email, "Email: (optional)", class: "control-label" %>
+            <div class="controls">
+              <%= f.text_field :email, class: "input-medium" %>
+            </div>
+          </div>
+          <div class="control-group">
+            <%= f.label :subject, "Subject:", class: "control-label" %>
+            <div class="controls">
+              <%= f.text_field :subject, class: "input-medium" %>
+            </div>
+          </div>
+          <div class="control-group">
+            <%= f.label :body, "Feedback:", class: "control-label" %>
+            <div class="controls">
+              <%= f.text_area :body, rows: "10", class: "field span5" %>
+            </div>
+          </div>
+          <%= f.submit "Submit feedback", class: "btn btn-large btn-primary" %>
+        </fieldset>
+      <% end %>
+    </div>
+  </div>
+</div>

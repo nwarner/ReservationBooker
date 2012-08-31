@@ -1,0 +1,9 @@
+<br />
+<div id="error_explanation2">
+  <h2><%= pluralize(request.errors.count, "error") %> prohibited this request from being saved:</h2><br />
+  <ul>
+  <% request.errors.full_messages.each do |msg| %>
+    <li><%= msg %></li>
+  <% end %>
+  </ul>
+</div>

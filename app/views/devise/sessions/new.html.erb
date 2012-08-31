@@ -1,0 +1,49 @@
+<% provide(:title, "sign in") %>
+
+<div class="hero-unit clearfix less_padding">
+  <div class="pull-left span7 content">
+    <div class="page-header">
+      <h1 class="page_title">reservation booker</h1>
+      <%= image_tag "restaurant_clip_art.jpeg", alt: "Reservation Booker", class: "main_image" %>
+      <h2>"eat when you want, where you want"</h2>
+    </div>
+    <p>
+      Prearrange your restaurant dining experience today with absolutely no hassle!
+      We can automatically book reservations for you free of charge right when they become
+      available for your specified time and party size, for almost any restaurant nationwide.
+      Just sign in with your OpenTable email and password to get started!
+    </p>
+  </div>
+  <div class="pull-right">
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "well" }) do |f| %>
+      <fieldset>
+        <legend>Sign in:</legend>
+        <div class="control-group">
+          <%= f.label :email, "Email:", class: "control-label" %>
+          <div class="controls">
+            <%= f.email_field :email, class: "input-medium" %>
+          </div>
+        </div>
+        <div class="control-group">
+          <%= f.label :password, "Password:", class: "control-label" %>
+          <div class="controls">
+            <%= f.password_field :password, class: "input-medium" %>
+          </div>
+        </div>
+        <div class="control-group">
+          <div class="controls">
+            <% if devise_mapping.rememberable? -%>
+              <label class="checkbox">
+                <%= f.check_box :remember_me %> Remember me
+              </label>
+            <% end -%>
+            <%= f.submit "Sign in", class: "btn btn-large btn-primary btn_sign_in" %>
+          </div>
+        </div>
+      </fieldset>
+      <%= link_to "Forgot your password?", new_password_path(resource_name) %>
+    <% end %>
+  </div>
+</div>
+
+<%= link_to image_tag("rails.png", alt: "Rails"), "http://rubyonrails.org/" %>

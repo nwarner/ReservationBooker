@@ -1,0 +1,25 @@
+<% provide(:title, "retrieve password") %>
+
+<div class="hero-unit clearfix less_padding">
+  <div class="content static_page">
+    <h1 class="page_title">retrieve password</h1>
+    <p>
+      Forgot your password? No problem! Just enter your email and we'll send you instructions
+      on how to reset your password.
+    </p>
+    <div class="static_page_form">
+  		<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, class: "well" }) do |f| %>
+        <fieldset>
+    	    <%= devise_error_messages! %>
+          <div class="control-group">
+            <%= f.label :email, "Email:", class: "control-label" %>
+            <div class="controls">
+              <%= f.email_field :email, class: "input-medium" %>
+            </div>
+          </div>
+          <%= f.submit "Send me reset password instructions", class: "btn btn-large btn-primary" %>
+        </fieldset>
+      <% end %>
+    </div>
+  </div>
+</div>

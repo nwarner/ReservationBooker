@@ -1,0 +1,5 @@
+update_restaurants:
+  cron: "* * * * *"
+  queue: update
+  class: UpdateRestaurants
+  description: "Update list of restaurants from OpenTable.com"
