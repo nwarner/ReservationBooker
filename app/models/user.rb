@@ -39,19 +39,30 @@ module Devise
 
       def validate_username_and_password(username, password)
         agent = Mechanize.new
-        login_page = agent.get("https://secure.opentable.com/login.aspx")
+        
+        # try to open OpenTable's login page
+        begin
+          login_page = agent.get("https://secure.opentable.com/login.aspx")
+        rescue Exception => e
+          return nil
+        end
+        
         login_form = login_page.form('Login')
         login_form.txtUserEmail = username
         login_form.txtUserPassword = password
         login_form.checkbox_with(:name => 'chkRemember').check
-        new_page = agent.submit(login_form, login_form.buttons.first)
         
-        # if email and password are valid on OpenTable, return the associated cookie jar...
+        # try to submit the filled in login form
+        begin
+          new_page = agent.submit(login_form, login_form.buttons.first)
+        rescue Exception => e
+          return nil
+        end
+        
+        # if email and password are valid on OpenTable, return the associated cookie jar
         # otherwise register the user automatically
         if not new_page.body =~ /txtUserPassword/
           return agent.cookie_jar
-        else
-          
         end
         nil
       end

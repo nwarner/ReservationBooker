@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120822211448) do
+ActiveRecord::Schema.define(:version => 20120908002129) do
 
   create_table "requests", :force => true do |t|
     t.integer  "user_id"
@@ -40,6 +40,7 @@ ActiveRecord::Schema.define(:version => 20120822211448) do
 
   add_index "restaurants", ["city"], :name => "index_restaurants_on_city"
   add_index "restaurants", ["name"], :name => "index_restaurants_on_name"
+  add_index "restaurants", ["opentable_restaurant_id"], :name => "index_restaurants_on_opentable_restaurant_id"
   add_index "restaurants", ["state"], :name => "index_restaurants_on_state"
 
   create_table "users", :force => true do |t|

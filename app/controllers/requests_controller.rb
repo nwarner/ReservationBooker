@@ -37,20 +37,18 @@ class RequestsController < ApplicationController
   # create a new request
   def create
     @request = current_user.requests.build(params[:request])
-    @request.save
-    status = @request.try_reserve
-    if not @request.isReserved
-      flash[:alert] = status
-      respond_to do |format|
-        format.html { redirect_to user_request_url(current_user, @request) }
-        format.js
+    if @request.save
+      status = @request.try_reserve
+      if not @request.isReserved
+        flash[:alert] = status
+      else
+        flash[:success] = status
+        session[:open_request] = true
       end
-    else
-      flash[:success] = status
-      respond_to do |format|
-        format.html { redirect_to user_request_path(current_user, @request) }
-        format.js
-      end
+      session[:open_request] = true
+    end
+    respond_to do |format|
+      format.js
     end
   end
   

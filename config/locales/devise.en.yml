@@ -17,7 +17,7 @@ en:
       unauthenticated: 'You need to sign in before continuing.'
       unconfirmed: 'You have to confirm your account before continuing.'
       locked: 'Your account is locked.'
-      invalid: "We were unable to verify your OpenTable email and password, or you haven't filled out your phone number on OpenTable.  Please check that you've correctly filled out the required fields and have a valid phone number listed in your account, then try again."
+      invalid: "We were unable to log you in at this time.  Your OpenTable email and password may be incorrect, you may not have filled out your phone number on your OpenTable account, or the OpenTable servers may currently be down.  Please verify these and try again."
       invalid_token: 'Invalid authentication token.'
       timeout: 'Your session expired, please sign in again to continue.'
       inactive: 'Your account was not activated yet.'

@@ -10,6 +10,8 @@ class Restaurant < ActiveRecord::Base
   validates :state, presence: true
   validates :ZIP, presence: true
   
+  default_scope order: "restaurants.name ASC"
+  
   # returns restaurants matching to a name, city, and/or state
   def self.search(name, city, state)
     if name.empty? && city.empty? && state.empty?

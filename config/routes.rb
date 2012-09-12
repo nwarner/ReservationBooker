@@ -22,7 +22,6 @@ ReservationBooker::Application.routes.draw do
     get 'autocomplete_restaurant_name', on: :collection
     get 'autocomplete_restaurant_city', on: :collection
     get 'search', on: :collection
-    get 'show', on: :member
   end
     
   match 'contact' => 'contact#new', as: 'contact', via: :get

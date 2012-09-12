@@ -15,13 +15,24 @@ gem 'redis-rails'
 
 # Bundle edge Rails instead:
 # gem 'rails', :git => 'git://github.com/rails/rails.git'
-
-group :development, :test do
-  gem 'mysql2'
+platforms :ruby do 
+  group :development, :test do
+    gem 'mysql2'
+    gem 'therubyracer'
+  end
+  group :production do
+    gem 'pg'
+  end
 end
 
-group :production do
-  gem 'pg'
+platforms :jruby do 
+  gem 'activerecord-jdbc-adapter'
+  gem 'jruby-openssl'
+  gem 'jdbc-mysql'
+  gem 'json'
+  group :assets do
+    gem 'therubyrhino'
+  end
 end
 
 # Gems used only for assets and not required

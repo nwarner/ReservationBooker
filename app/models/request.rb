@@ -14,7 +14,7 @@ class Request < ActiveRecord::Base
   validates :time, :presence => true
   validates :restaurant, presence: true
 
-  default_scope order: 'requests.created_at DESC'
+  default_scope order: "requests.created_at DESC"
 
   # try to reserve this request on OpenTable
   def try_reserve
@@ -23,7 +23,10 @@ class Request < ActiveRecord::Base
     if self.available_times.include? (self.time.strftime("%-m/%e/%Y ") + self.time.strftime("%l").strip + self.time.strftime(":%M:%S %p %z"))
       agent = User.find(self.user_id).mechanize  # get the user's mechanize agent with the appropriate cookie-jar
       
-      # get the reservation page for the desired time
+      # if no opentable_parameters were saved, try again
+      self.update_available_times if self.opentable_parameters[:shpu] == -1
+      
+      # try to get the reservation page for the desired time
       reservation_uri = "http://www.opentable.com/details.aspx?"
       reservation_uri += "shpu=#{self.opentable_parameters[:shpu]}&"
       reservation_uri += "hpu=#{self.opentable_parameters[:hpu]}&"
@@ -34,7 +37,12 @@ class Request < ActiveRecord::Base
       reservation_uri += "i=#{self.opentable_parameters[:i]}&"
       reservation_uri += "ss=#{self.opentable_parameters[:ss]}&"
       reservation_uri += "sd=#{self.opentable_parameters[:sd]}"
-      reservation_page = agent.get(reservation_uri)
+      begin
+        reservation_page = agent.get(reservation_uri)
+      rescue Exception => e
+        self.isReserved = false
+        reservation_status = "Request was not reserved because there was a problem connecting with OpenTable servers.  Please try again."
+      end
 
       # if the reservation isn't still available for some reason
       if reservation_page.parser.css("span#lblMsgSubTitle").text == "Your Request Cannot Be Completed"
@@ -42,10 +50,15 @@ class Request < ActiveRecord::Base
         reservation_status = "Request was not reserved because that reservation time is no longer available."
       else
 
-        # confirm the reservation
+        # try to confirm the reservation
         reservation_form = reservation_page.form('SearchForm')
         submit_button = reservation_form.button_with(:name => 'btnContinueReservation')
-        done_page = agent.submit(reservation_form, submit_button)
+        begin
+          done_page = agent.submit(reservation_form, submit_button)
+        rescue Exception => e
+          self.isReserved = false
+          reservation_status = "Request was not reserved because there was a problem connecting with OpenTable servers.  Please try again."
+        end
 
         # check if request was completed
         if done_page.parser.css("span#lblMsgSubTitle").text == "Your Request Cannot Be Completed"
@@ -69,12 +82,17 @@ class Request < ActiveRecord::Base
   def update_available_times
     agent = User.find(self.user_id).mechanize  # get the user's mechanize agent with the appropriate cookie-jar
     
-    # get the restaurant page with reservation times
+    # try to get the restaurant page with reservation times
     restaurant_address = "http://www.opentable.com/opentables.aspx"
     restaurant_address += "?p=#{self.party_size}"
     restaurant_address += "&d=#{self.time.strftime("%-m/%e/%Y") + "%20" + self.time.strftime("%I:%M:%S") + "%20" + self.time.strftime("%p")}"
     restaurant_address += "&rid=#{self.restaurant.opentable_restaurant_id}&t=single"
-    restaurant_page = agent.get(restaurant_address)
+    begin
+      restaurant_page = agent.get(restaurant_address)
+    rescue Exception => e
+      self.opentable_parameters = { :shpu => "-1", :hpu => "-1", :rid => "-1", :d => "-1", :p => "-1", :pt => "-1", :i => "-1", :ss => "-1", :sd => "-1" }
+      return
+    end
 
     # get the reservation confirmation page
     times = restaurant_page.search("ul[@class='ResultTimes']/li[a]")
@@ -117,33 +135,49 @@ class Request < ActiveRecord::Base
   # cancel this request on OpenTable
   def cancel_reservation
     
-    # get the profile page for the user
+    # try to get the profile page for the user
     agent = User.find(user_id).mechanize
-    profile_page = agent.get("http://www.opentable.com/myprofile.aspx")
+    begin
+      profile_page = agent.get("http://www.opentable.com/myprofile.aspx")
+    rescue Exception => e
+      return "Reservation was not canceled because there was a problem connecting with OpenTable servers.  Please try again."
+    end
 
     # if one or more reservations are listed
     if profile_page.parser.css("div.RestaurantName a").size > 0
       
-      # find the reservation we want to cancel in the list
-      index = -1
-      for i in 0..(profile_page.parser.css("div.RestaurantName a").size-1) do
-        index = i if profile_page.parser.css("div.RestaurantName a")[i].text == self.restaurant.name
-      end
-      
-      # if the reservation is there, cancel the reservation
-      if index >= 0
-        cancel_page = agent.get(profile_page.parser.css("div.C a")[index]['href'])
+      # if the reservation is there, try to cancel the reservation
+      if index = profile_page.parser.css("div.RestaurantName a").index { |x| x.text == self.restaurant.name }
+        
+        begin
+          cancel_page = agent.get(profile_page.parser.css("div.C a")[index]['href'])
+        rescue Exception => e
+          return "Reservation was not canceled because there was a problem connecting with OpenTable servers.  Please try again."
+        end
+        
         cancel_form = cancel_page.form('Form1')
         submit_button = cancel_form.button_with(:name => 'btnCancelReso')
-        done_page = agent.submit(cancel_form, submit_button)
+        
+        begin
+          done_page = agent.submit(cancel_form, submit_button)
+        rescue Exception => e
+          return "Reservation was not canceled because there was a problem connecting with OpenTable servers.  Please try again."
+        end
         
         self.isReserved = false
-        self.save  # save the request
+        self.save
         reservation_status = "Reservation was successfully canceled."
       end
+      
     else
       reservation_status = "Reservation was not canceled."
     end
+    
     return reservation_status  # return the reservation status
+  end
+  
+  # deletes all requests that do not link to valid restaurants
+  def self.check_validity
+    self.all.each { |request| request.destroy if request.restaurant.nil? }
   end
 end

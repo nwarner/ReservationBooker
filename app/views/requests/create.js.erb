@@ -1,7 +1,17 @@
 <% if @request.errors.any? %>
   $("#errors_<%= @request.restaurant_id %>").hide();
-  $("#errors_<%= @request.restaurant_id %>").html("<%= escape_javascript(render('errors', :request => @request)) %>");
+  $("#errors_<%= @request.restaurant_id %>").html("<%= escape_javascript(render("errors", :request => @request)) %>");
   $("#errors_<%= @request.restaurant_id %>").show();
 <% else %>
-  document.location = "<%= user_request_url(current_user, @request) %>";
+  // document.location = "<%= user_path(current_user) %>";
+  $.ajax("<%= user_path(current_user) %>", { 
+    dataType: "script",
+    success: function(data) {
+      $("#showRequest_<%= @request.id %>").modal("show");
+      $("#showRequest_<%= @request.id %>").on('hidden', function () {
+        History.replaceState(null, title, "<%= user_path(current_user) %>");
+      });
+    }
+  });
+  
 <% end %>
