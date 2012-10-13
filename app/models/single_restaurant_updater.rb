@@ -9,7 +9,7 @@
 # to be processed.
 #
 class SingleRestaurantUpdater
-  @queue = :single_restaurant_updater
+  @queue = :restaurants
   @@agent = Mechanize.new
   @@redis = Redis.new
   def self.perform(restaurant_link)
@@ -53,6 +53,5 @@ class SingleRestaurantUpdater
         Rails.logger.info error_message
       end
     end
-    Resque.enqueue(RestaurantUpdater, false, true) if Resque.size(:single_restaurant) == 0 and Resque.working.count == 1
   end
 end

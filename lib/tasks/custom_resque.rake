@@ -7,6 +7,8 @@ namespace :resque do
   task :levion_workers do
     require 'resque'
     $mutex = Mutex.new
+    $working_mutex = Mutex.new
+    $m3 = Mutex.new
     
     # preloading everything:
     $mutex.synchronize do
@@ -23,8 +25,43 @@ namespace :resque do
 
     module Resque
       class Worker
-        
         @@semaphore = Mutex.new 
+        
+        
+        # Given a string worker id, return a boolean indicating whether the
+        # worker exists
+        def self.exists?(worker_id)
+          $m3.synchronize { redis.sismember(:workers, worker_id) }
+        end
+        
+        # Returns an array of all worker objects currently processing
+        # jobs.
+        def self.working
+          $working_mutex.synchronize do
+            puts "LOCKED"
+            names = all
+            return [] unless names.any?
+
+            names.map! { |name| "worker:#{name}" }
+
+            reportedly_working = {}
+
+            begin
+              reportedly_working = redis.mapped_mget(*names).reject do |key, value|
+                value.nil? || value.empty?
+              end
+            rescue Redis::Distributed::CannotDistribute
+              names.each do |name|
+                value = redis.get name
+                reportedly_working[name] = value unless value.nil? || value.empty?
+              end
+            end
+
+            reportedly_working.keys.map do |key|
+              find key.sub("worker:", '')
+            end.compact
+          end
+        end
         
         def to_s
           @to_s ||= "#{hostname}:#{Process.pid}:#{@queues.join(',')}:#{Thread.current.to_s.scan(/:0x(\w+)/).flatten.join}"

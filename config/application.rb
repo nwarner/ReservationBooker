@@ -37,7 +37,7 @@ module ReservationBooker
     config.encoding = "utf-8"
 
     # Configure sensitive parameters which will be filtered from the log file.
-    config.filter_parameters += [:password]
+    # config.filter_parameters += [:password]
 
     # Enable escaping HTML in JSON.
     config.active_support.escape_html_entities_in_json = true
@@ -59,12 +59,18 @@ module ReservationBooker
     # Version of your assets, change this if you want to expire all your assets
     config.assets.version = '1.0'
     
+    config.action_mailer.delivery_method = :smtp
+    
     config.action_mailer.smtp_settings = {
-      address: "91.121.17.141",
-      port:    2612,
-      domain: 'notify.levion.com',
-      enable_starttls_auto: false
+      :address              => "zimbra.levion.com",
+      :port                 => 587,
+      :domain               => 'levion.com',
+      :user_name            => 'errors',
+      :password             => '4cm6hg07',
+      :authentication       => :login,
+      :enable_starttls_auto =>  true
     }
+  
     
     config.assets.initialize_on_precompile = false
 

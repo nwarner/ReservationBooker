@@ -11,11 +11,12 @@
       Prearrange your restaurant dining experience today with absolutely no hassle!
       We can automatically book reservations for you free of charge right when they become
       available for your specified time and party size, for almost any restaurant nationwide.
-      Just sign in with your OpenTable email and password to get started!
+      Just sign in with your OpenTable email and password to get started, or click
+      <%= link_to "here", "#showSignup", data: { toggle: "modal" } %> to make an account.
     </p>
   </div>
   <div class="pull-right">
-    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "well" }) do |f| %>
+    <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "well no_border" }) do |f| %>
       <fieldset>
         <legend>Sign in:</legend>
         <div class="control-group">
@@ -47,3 +48,66 @@
 </div>
 
 <%= link_to image_tag("rails.png", alt: "Rails"), "http://rubyonrails.org/" %>
+
+<div class="modal hide fade content" id="showSignup">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal">x</button>
+		<h3 class="move_left">sign up</h3>
+	</div>
+	<div class="modal-body">
+    <div class="pull-left">
+      <%= form_tag(sign_up_path, :method => "post", :class => "well") do %>
+        <fieldset>
+          <div class="control-group">
+            <%= label_tag :first_name, "First name:", class: "control-label" %>
+            <div class="controls">
+              <%= text_field_tag :first_name, nil, class: "input-medium" %>
+            </div>
+          </div>
+          <div class="control-group">
+            <%= label_tag :last_name, "Last name:", class: "control-label" %>
+            <div class="controls">
+              <%= text_field_tag :last_name, nil, class: "input-medium" %>
+            </div>
+          </div>
+          <div class="control-group">
+            <%= label_tag :email, "Email:", class: "control-label" %>
+            <div class="controls">
+              <%= email_field :email, nil, class: "input-medium" %>
+            </div>
+          </div>
+          <div class="control-group">
+            <%= label_tag :password, "Password:", class: "control-label" %>
+            <div class="controls">
+              <%= password_field_tag :password, nil, class: "input-medium" %>
+            </div>
+          </div>
+          <div class="control-group">
+            <%= label_tag :repeat_password, "Repeat password:", class: "control-label" %>
+            <div class="controls">
+              <%= password_field_tag :repeat_password, nil, class: "input-medium" %>
+            </div>
+          </div>
+          <div class="control-group">
+            <%= label_tag :phone, "Phone number:", class: "control-label" %>
+            <div class="controls">
+              <%= telephone_field :phone, nil, class: "input-medium" %>
+            </div>
+          </div>
+          <%= submit_tag "Sign up", class: "btn btn-large btn-primary" %>
+        </fieldset>
+      <% end %>
+    </div>
+    <div class="pull-right span4 make_account">
+      <p>
+        You must complete all fields in order to make an account with OpenTable.
+      </p>
+      <div class="opentable">
+        <%= link_to image_tag("opentable.jpg", alt: "OpenTable"), "http://www.opentable.com" %>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer match_background">
+    <button class="btn btn-large black_btn" data-dismiss="modal" aria-hidden="true">Close</button>
+  </div>
+</div>

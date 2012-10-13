@@ -1,8 +1,11 @@
 class Request < ActiveRecord::Base
+  TIME_MARGINS = [ { :value => 30, :name => "30 minutes" }, 
+                   { :value => 45, :name => "60 minutes" } ]
+  
   before_save :update_available_times
   
-  attr_accessible :user_id, :party_size, :time, :isReserved, :restaurant_id, :available_times, :opentable_parameters
-  
+  attr_accessible :user_id, :party_size, :time, :time_margin, :isReserved, :restaurant_id, :available_times, :opentable_parameters
+ 
   serialize :available_times
   serialize :opentable_parameters
 
@@ -10,17 +13,27 @@ class Request < ActiveRecord::Base
   belongs_to :restaurant
 
   validates :user_id, presence: true
-  validates :party_size, presence: true
+  validates :party_size, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 1 }
   validates :time, :presence => true
   validates :restaurant, presence: true
 
   default_scope order: "requests.created_at DESC"
-
+  
+  def self.time_margins_short
+    [["exact time", 0], ["\u00B115 mins", 15],["\u00B130 mins", 30],["\u00B145 mins", 45],
+    ["\u00B11 hr", 60],["\u00B11.5 hrs", 90],["\u00B12 hrs", 120],["\u00B13 hrs", 180],["\u00B14 hrs", 240]]
+  end
+  
+  def self.time_margins_long
+    [["\u00B10 minutes (no margin)", 0], ["\u00B115 minutes", 15],["\u00B130 minutes", 30],["\u00B145 minutes", 45],
+    ["\u00B11 hour", 60],["\u00B11.5 hours", 90],["\u00B12 hours", 120],["\u00B13 hours", 180],["\u00B14 hrs", 240]]
+  end
+  
   # try to reserve this request on OpenTable
   def try_reserve
     
     # if the desired time is available to reserve
-    if self.available_times.include? (self.time.strftime("%-m/%e/%Y ") + self.time.strftime("%l").strip + self.time.strftime(":%M:%S %p %z"))
+    if self.available_times.include? (self.time.strftime("%-m/%-d/%Y ") + self.time.strftime("%l").strip + self.time.strftime(":%M:%S %p %z"))
       agent = User.find(self.user_id).mechanize  # get the user's mechanize agent with the appropriate cookie-jar
       
       # if no opentable_parameters were saved, try again
@@ -63,8 +76,7 @@ class Request < ActiveRecord::Base
         # check if request was completed
         if done_page.parser.css("span#lblMsgSubTitle").text == "Your Request Cannot Be Completed"
           self.isReserved = false  # the request was not reserved
-          reservation_status =
-            "Request was not reserved because you have already confirmed a reservation within two and half hours of the current time."
+          reservation_status = done_page.parser.css("span#lblErrorMsg").text
         else
           self.isReserved = true  # the request was successfully completed & reserved
           reservation_status = "Request was successfully reserved."
@@ -73,6 +85,7 @@ class Request < ActiveRecord::Base
     else
       self.isReserved = false  # the desired time was not available to reserve
       reservation_status = "Request was not reserved because there were no open reservations that matched your desired time."
+      # TODO: add code here to set up a scheduled try again request
     end
     self.save  # save the request and update the list of available times
     return reservation_status  # return the reservation status
@@ -143,11 +156,13 @@ class Request < ActiveRecord::Base
       return "Reservation was not canceled because there was a problem connecting with OpenTable servers.  Please try again."
     end
 
-    # if one or more reservations are listed
+    # if one or more reservations are listed, find the desired reservation and try to cancel it
     if profile_page.parser.css("div.RestaurantName a").size > 0
       
-      # if the reservation is there, try to cancel the reservation
-      if index = profile_page.parser.css("div.RestaurantName a").index { |x| x.text == self.restaurant.name }
+      # loop through each reservation and save the index of the desired reservation
+      index = -1
+      profile_page.parser.css("div.RestaurantName a").each_with_index { |x, i| index = i if x.text == self.restaurant.name }
+      if index != -1
         
         begin
           cancel_page = agent.get(profile_page.parser.css("div.C a")[index]['href'])

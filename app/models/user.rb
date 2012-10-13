@@ -11,6 +11,7 @@ module Devise
     class OpenTableAuthenticatable < Authenticatable
       def authenticate!
         cookie_jar = validate_username_and_password(authentication_hash[:email], password)
+        return fail(:invalid) if cookie_jar.nil?
         values = CGI::parse(cookie_jar.jar["opentable.com"]["/"]["uCke"].to_s) if cookie_jar
 
         uid = values['uCke'].join('').gsub(/uid\=/,'')

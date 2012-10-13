@@ -14,13 +14,3 @@
 //= require jquery_ujs
 //= require_tree .
 //= require bootstrap
-
-// $(document).ready(function() {
-//   History.Adapter.bind(window, 'statechange', function() { 
-//     state = History.getState();
-//     if ((state.data && state.data.ajaxAction == false) || ! state.data) {
-//       $.ajax(state.url, { dataType: "html", success: function(data) { $("#content.container").html(data); } })
-//     }
-//   });
-//   
-// });

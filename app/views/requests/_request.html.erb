@@ -1,17 +1,11 @@
 <li>
   <p class="request_links"><small>
-    <% if request.isReserved %>
-      <%= link_to "cancel", cancel_user_request_path(current_user, request), class: "tiny_link" %>
-    <% else %>
-      <%= link_to "reserve", reserve_user_request_path(current_user, request), class: "tiny_link" %>
-    <% end %>
-    <%= link_to "change", search_restaurants_path(restaurant_name: request.restaurant.name, request_id: request.id), {remote: true, 'data-toggle' => 'modal', 'data-target' => "#makeReservation_#{request.restaurant.id}", 'data-backdrop' => true, 'data-keyboard' => true, class: "tiny_link" } %>
     <%= link_to "delete", [current_user, request], method: :delete, data: { confirm: "Are you sure?" },
-           title: request.restaurant.name, class: "tiny_link" %>
+                title: request.restaurant.name, class: "tiny_link" %>
   </small></p>
   <%= link_to "#showRequest_#{request.id}", data: { toggle: "modal" } do %>
-    <span class="request_time"><%= request.time.strftime("%l:%M %p - %A, %B %e, %Y") %></span>
-    <span class="request_info">
+    <span class="label_display"><%= request.time.strftime("%l:%M %p - %A, %B %e, %Y") %></span>
+    <span class="block_display">
       <%= request.party_size %> <% if request.party_size == 1 %> person <% else %> people <% end %>@ <strong><%= request.restaurant.name %></strong>
       in <%= request.restaurant.city %>, <%= request.restaurant.state %>
     </span>
@@ -19,9 +13,14 @@
       <% if request.isReserved %>
         reserved
       <% else %>
-        not reserved
+        <% if request.time_margin.nil? %>
+          not reserved
+        <% else %>
+          autobooking
+          <%= Request.time_margins_short.select { |x| x[1] == request.time_margin }[0][0] %>
+          <%= image_tag "autobooking.gif", alt: "Autobooking...", class: "autobooking" %>
+        <% end %>
       <% end %>
-      - created <%= time_ago_in_words(request.created_at) %> ago.
     </span>
   <% end %>
   <% if request != Request.last %>
@@ -34,14 +33,26 @@
 		<h3 class="move_left">request info</h3>
 	</div>
 	<div class="modal-body">
-    <% if not request.isReserved and not request.available_times.include? (request.time.strftime("%-m/%e/%Y ") + request.time.strftime("%l").strip + request.time.strftime(":%M:%S %p %z")) %>
+    <% if !request.time_margin.nil? %>
+      <p>
+        We're currently searching
+        <% if request.time_margin.zero? %>
+          for an open reservation that exactly matches your desired time.... 
+        <% else %>
+          for all open reservations within
+          <%= Request.time_margins_short.select { |x| x[1] == request.time_margin }[0][0] %> of your desired time....
+        <% end %>
+      </p>
+      <p>You can also alter this request by clicking Change, or widen/shorten the time range you selected for Autobooking.</p>
+    <% elsif not request.isReserved and not request.available_times.include? (request.time.strftime("%-m/%e/%Y ") + request.time.strftime("%l").strip + request.time.strftime(":%M:%S %p %z")) %>
       <p>
         Your desired time was not available
         <% if not request.available_times.empty? %>
-          . Please click one of the nearby available times listed to book your reservation immediately.
+          . Please click one of the nearby available times listed to book your reservation immediately,
         <% else %>
-          , and there are no open reservations for nearby times.  Please double-check that you entered your desired reservation time correctly.
+        , and there are no open reservations for nearby times.  Please double-check that you entered your desired reservation time correctly,
         <% end %>
+        or enter an acceptable margin of time for your desired reservation and we will book it for you as soon as an available time opens up.
         You can also alter this request by clicking Change.
       </p>
     <% end %>
@@ -88,10 +99,10 @@
               <% request.available_times.each do |time| %>
                 <li>
                   <%= link_to DateTime.strptime(time, "%m/%d/%Y %l:%M:%S %p %z").strftime("%l:%M %p - %A, %B %e, %Y"),
-                              user_requests_path(current_user, request: { user_id: current_user.id,
+                              edit_user_request_path(current_user, request: { user_id: current_user.id,
                                                              party_size: request.party_size,
                                                              time: DateTime.strptime(time, "%m/%d/%Y %l:%M:%S %p %z"),
-                                                             restaurant_id: request.restaurant.id }), { method: :post } %>
+                                                             restaurant_id: request.restaurant.id }, old_request_id: request.id) %>
                 </li>
               <% end %>
             </ul>
@@ -121,16 +132,41 @@
         </td>
       </tr>
     </table>
+    <% if !request.isReserved and request.time_margin.nil? %>
+      <%= form_tag({controller: "requests", action: "autobook", id: request.id, user_id: current_user.id }, method: "get", class: "autobook") do %>
+        <fieldset>
+          <div class="control-group">
+            <%= label_tag :autobook_label, "Autobooking time range:", class: "control-label" %>
+            <div class="controls">
+              <%= select_tag :time_margin, options_for_select(Request.time_margins_long), class: "time-margin input-large" %>
+              <%= submit_tag "Autobook", class: "btn btn-large btn-primary" %>
+            </div>
+          </div>
+        </fieldset>
+      <% end %>
+    <% elsif !request.isReserved and !request.time_margin.nil? %>
+      <%= form_tag({controller: "requests", action: "autobook", id: request.id, user_id: current_user.id }, method: "get", class: "autobook") do %>
+        <fieldset>
+          <div class="control-group">
+            <%= label_tag :autobook_label, "Change Autobooking time margin:", class: "control-label" %>
+            <div class="controls">
+              <%= select_tag :time_margin, options_for_select(Request.time_margins_long, Request.time_margins_long.select { |x| x[1] == request.time_margin }[0]), class: "time-margin input-large" %>
+              <%= submit_tag "Change Autobook", class: "btn btn-large btn-primary" %>
+            </div>
+          </div>
+        </fieldset>
+      <% end %>
+    <% end %>
   </div>
   <div class="modal-footer match_background">
     <% if request.isReserved %>
-    <%= link_to "Cancel", cancel_user_request_path(current_user, request), class: "btn btn-large btn-primary" %>
+    <%= link_to "Cancel", cancel_user_request_path(current_user, request), class: "btn btn-large black_btn" %>
     <% else %>
-      <%= link_to "Reserve", reserve_user_request_path(current_user, request), class: "btn btn-large btn-primary" %>
+      <%= link_to "Reserve", reserve_user_request_path(current_user, request), class: "btn btn-large black_btn" %>
     <% end %>
-    <%= link_to "Change", search_restaurants_path(restaurant_name: request.restaurant.name, request_id: request.id), {remote: true, 'data-toggle' => 'modal', 'data-target' => "#modal-window", class: "btn btn-large btn-primary" } %>
+    <%= link_to "Change", search_restaurants_path(restaurant_name: request.restaurant.name, request_id: request.id), {remote: true, 'data-toggle' => 'modal', 'data-target' => "#modal-window", class: "btn btn-large black_btn" } %>
     <%= link_to "Delete", [current_user, request], method: :delete, data: { confirm: "Are you sure?" },
-                                                   title: request.restaurant.name, class: "btn btn-large btn-primary" %>
-    <button class="btn btn-large btn-primary" data-dismiss="modal" aria-hidden="true">Close</button>
+                                                   title: request.restaurant.name, class: "btn btn-large black_btn" %>
+    <button class="btn btn-large black_btn" data-dismiss="modal" aria-hidden="true">Close</button>
     </div>
 </div>

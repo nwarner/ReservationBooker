@@ -8,7 +8,7 @@
       on how to reset your password.
     </p>
     <div class="static_page_form">
-  		<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, class: "well" }) do |f| %>
+  		<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, class: "well no_border" }) do |f| %>
         <fieldset>
     	    <%= devise_error_messages! %>
           <div class="control-group">

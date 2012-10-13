@@ -1,5 +1,5 @@
-<%if @request_id %>
-document.location = "<%= search_restaurants_path(:restaurant_name => @request.restaurant.name, :request_id => @request.id).html_safe %>";
+<% if @request %>
+  document.location = "<%= search_restaurants_path(:restaurant_name => @request.restaurant.name, :request_id => @request.id).html_safe %>";
 <% else %>
-$("#search-results").html("<%= escape_javascript(render('search_results')) %>");
+  document.location = "<%= search_restaurants_path %>";
 <% end %>

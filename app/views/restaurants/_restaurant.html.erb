@@ -1,7 +1,7 @@
 <%= link_to "#makeReservation_#{restaurant.id}", data: { toggle: "modal" } do %>
   <li>
-    <span class="restaurant_name"><%= restaurant.name %></span>
-    <span class="restaurant_address"><%= restaurant.address %></span>
+    <span class="label_display"><%= restaurant.name %></span>
+    <span class="block_display"><%= restaurant.address %></span>
     <span><%= restaurant.city %></span>, <span><%= restaurant.state %></span> <span><%= restaurant.ZIP %></span>
   </li>
 <% end %>
@@ -16,8 +16,8 @@
         <div class="modal_padding">
           <fieldset>
             <div class="control-group">
-              <span class="restaurant_name"><strong><%= restaurant.name %></strong></span>
-              <span class="restaurant_address"><%= restaurant.address %></span>
+              <span class="label_display"><strong><%= restaurant.name %></strong></span>
+              <span class="block_display"><%= restaurant.address %></span>
               <span><%= restaurant.city %></span>, <span><%= restaurant.state %></span> <span><%= restaurant.ZIP %></span>
               <%= f.label :party_size, "Party size:", class: "control-label top_space" %>
               <div class="controls">
@@ -28,8 +28,8 @@
               <%= f.label :time, "Date & Time:", class: "control-label" %>
               <div class="controls">
                 <%= f.text_field :time, id: "timepicker_#{restaurant.id}", class: "input-medium" %>
-                <a href="#" class="btn request_links margin_button black_btn" data-dismiss="modal">Close</a>
-                <%= f.submit "Make reservation request", class: "btn btn-primary request_links margin_button" %>
+                <%= f.submit "Make reservation request", class: "btn btn-primary margin_button" %>
+                <a href="#" class="btn margin_button black_btn close_right" data-dismiss="modal">Close</a>
               </div>
             </div>
             <%= f.hidden_field :restaurant_id, value: restaurant.id %>

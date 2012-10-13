@@ -14,6 +14,7 @@ ReservationBooker::Application.routes.draw do
     resources :requests do
       get 'reserve', on: :member
       get 'cancel', on: :member
+      get 'autobook', on: :member
       get 'delete_all', on: :collection
     end
   end
@@ -26,6 +27,8 @@ ReservationBooker::Application.routes.draw do
     
   match 'contact' => 'contact#new', as: 'contact', via: :get
   match 'contact' => 'contact#create', as: 'contact', via: :post
+  
+  match 'sign_up' => 'signup#create', as: 'sign_up', via: :post
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

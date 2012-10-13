@@ -5,7 +5,7 @@
 # location on OpenTable.
 #
 class RestaurantListingUpdater
-  @queue = :restaurant_listing_updater
+  @queue = :restaurants
   @@agent = Mechanize.new
   @@redis = Redis.new
   def self.perform(restaurant_listing_link)
@@ -17,13 +17,7 @@ class RestaurantListingUpdater
       raise e
       return
     end
-    link_save = ""
-    city_page.links.each do |link|
-      if link.text.include? 'See all'
-        link_save = link.href.to_s
-        break
-      end
-    end
+    link_save = city_page.links[city_page.links.find_index { |link| link.text.include? 'See all' }].href.to_s
     if @@redis.sadd "restaurant_listings", link_save
       begin
         Rails.logger.info "Currently saving #{link_save}."
@@ -33,7 +27,7 @@ class RestaurantListingUpdater
         raise e
         return
       end
-      location_page.search("a.r").each { |link| Resque.enqueue SingleRestaurantUpdater, link.attr("href").to_s }
+      location_page.search("a.r").each { |link| @@redis.sadd "restaurants", link.attr("href").to_s }
     end
   end
 end

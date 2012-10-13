@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120908002129) do
+ActiveRecord::Schema.define(:version => 20121001234837) do
 
   create_table "requests", :force => true do |t|
     t.integer  "user_id"
@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(:version => 20120908002129) do
     t.integer  "restaurant_id"
     t.string   "available_times"
     t.string   "opentable_parameters"
+    t.integer  "time_margin"
   end
 
   add_index "requests", ["user_id", "created_at"], :name => "index_requests_on_user_id_and_created_at"
